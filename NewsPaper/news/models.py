@@ -27,22 +27,19 @@ class Order(models.Model): # ТАБЛИЦА С ССЫЛКОЙ НА СОТРУД�
     time_in = models.DateTimeField(auto_now_add=True)
     time_out = models.DateTimeField(null=True)
     cost = models.FloatField(default=0.0)
-    pickup = models.BooleanField(default=False)
+    take_away = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='orders')
+    products = models.ManyToManyField(Product, through='ProductOrder')
 
 
 
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    products = models.ManyToManyField(Product, through='ProductOrder') # ССЫЛКА НА ПРОДУКТЫ
-
-    def get_duration(self): # я сделал все правильно без условия :(
+    def get_duration(self):
         if self.complete:
-            seconds = (self.time_in - self.time_out).total_seconds()
-            minutes = seconds // 60
-            return minutes
+            return (self.time_out - self.time_in).total_seconds()
+        else:
+            return (datetime.now() - self.time_in).total_seconds()
 
-        else:  # если ещё нет, то сколько длится выполнение
-            return (datetime.now(timezone.utc) - self.time_in).total_seconds() // 60
 
     def finish_order(self):
         self.time_out = datetime.now()
